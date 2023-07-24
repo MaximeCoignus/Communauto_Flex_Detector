@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.net.UnknownHostException
+import java.io.IOException
 
 const val BASE_URL = "https://www.reservauto.net/WCF/LSI/LSIBookingServiceV3.svc/"
 class MainActivity : ComponentActivity() {
@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
                     sendNotification("$numberOfCars Car(s) available!", "Go get your car quickly!")
                     enableButton(textView1, button)
                 }
-                catch (e: UnknownHostException)
+                catch (e: IOException)
                 {
                     disableButton(textView1, button, false)
                 }
