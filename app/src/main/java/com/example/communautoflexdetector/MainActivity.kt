@@ -6,9 +6,12 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import androidx.activity.ComponentActivity
@@ -32,46 +35,27 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        createNotificationChannel()
-
+        val textView1 = findViewById<TextView>(R.id.textView1)
         val button: Button = findViewById(R.id.button)
+        createNotificationChannel()
+        createNetworkRequest(textView1, button)
         button.setOnClickListener {
             lifecycleScope.launch {
-                var numberOfCars = 0
-                val textView1 = findViewById<TextView>(R.id.textView1)
-                val button = findViewById<TextView>(R.id.button)
-
                 try
                 {
-                    val message = StringBuilder()
-                    textView1.text = null
-                    button.text = "Searching..."
-                    button.isEnabled = false
-                    button.isClickable = false
+                    var numberOfCars = 0
+                    disableButton(textView1, button, true)
                     while (numberOfCars == 0) {
+                        delay(500L)
                         numberOfCars = execution()
-                        delay(1000L)
                     }
-                    message.append("Number of Flex vehicle(s) available: $numberOfCars")
-                    textView1.text = message
-
-                    Log.d("MainActivity", "car found: $numberOfCars")
                     sendNotification("$numberOfCars Car(s) available!", "Go get your car quickly!")
+                    enableButton(textView1, button)
                 }
                 catch (e: UnknownHostException)
                 {
-                    val errorMessage = StringBuilder()
-                    errorMessage.append("Please, check your internet connection!")
-                    textView1.text = errorMessage
-
-                    Log.d("MainActivity", "Exception: " + e.message)
-                    sendNotification("Research couldn't go through!", "Please, check your internet connection!")
+                    disableButton(textView1, button, false)
                 }
-                button.text = "Find a car"
-                button.isEnabled = true
-                button.isClickable = true
-                Log.d("MainActivity", "notification sent!")
             }
         }
     }
@@ -127,5 +111,54 @@ class MainActivity : ComponentActivity() {
                 }.build())
             }
         }
+    }
+
+    private fun createNetworkRequest(textView1: TextView, button: TextView) {
+        val networkCallback = object : ConnectivityManager.NetworkCallback() {
+            // network is available for use
+            override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+                runOnUiThread(Runnable {
+                    enableButton(textView1, button)
+                })
+            }
+
+            // lost network connection
+            override fun onLost(network: Network) {
+                super.onLost(network)
+                runOnUiThread(Runnable {
+                    disableButton(textView1, button, false)
+                })
+
+
+            }
+        }
+        val networkRequest = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+            .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+            .build()
+        val connectivityManager = getSystemService(ConnectivityManager::class.java) as ConnectivityManager
+        connectivityManager.requestNetwork(networkRequest, networkCallback)
+    }
+
+    private fun disableButton(textView1: TextView, button: TextView, searchMode: Boolean) {
+        val message = StringBuilder()
+        if (searchMode) {
+            button.text = "Searching..."
+        } else {
+            message.append("Please, check your internet connection!")
+            button.text = "Find a car"
+        }
+        textView1.text = message
+        button.isEnabled = false
+        button.isClickable = false
+    }
+
+    private fun enableButton(textView1: TextView, button: TextView) {
+        textView1.text = null
+        button.text = "Find a car"
+        button.isEnabled = true
+        button.isClickable = true
     }
 }
