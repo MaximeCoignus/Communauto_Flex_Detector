@@ -44,18 +44,21 @@ class MainActivity : ComponentActivity() {
                 try
                 {
                     var numberOfCars = 0
-                    disableButton(textView1, button, true)
+                    disableButton(button)
+                    searchingButton(button)
                     while (numberOfCars == 0) {
                         delay(500L)
                         numberOfCars = execution()
                     }
                     sendNotification("$numberOfCars Car(s) available!", "Go get your car quickly!")
-                    enableButton(textView1, button)
+                    enableButton(button)
                 }
                 catch (e: IOException)
                 {
-                    disableButton(textView1, button, false)
+                    disableButton(button)
+                    noInternetMessage(textView1)
                 }
+                findButton(button)
             }
         }
     }
@@ -119,7 +122,8 @@ class MainActivity : ComponentActivity() {
             override fun onAvailable(network: Network) {
                 super.onAvailable(network)
                 runOnUiThread(Runnable {
-                    enableButton(textView1, button)
+                    enableButton(button)
+                    internetBackMessage(textView1)
                 })
             }
 
@@ -127,7 +131,8 @@ class MainActivity : ComponentActivity() {
             override fun onLost(network: Network) {
                 super.onLost(network)
                 runOnUiThread(Runnable {
-                    disableButton(textView1, button, false)
+                    disableButton(button)
+                    noInternetMessage(textView1)
                 })
 
 
@@ -142,23 +147,31 @@ class MainActivity : ComponentActivity() {
         connectivityManager.requestNetwork(networkRequest, networkCallback)
     }
 
-    private fun disableButton(textView1: TextView, button: TextView, searchMode: Boolean) {
-        val message = StringBuilder()
-        if (searchMode) {
-            button.text = "Searching..."
-        } else {
-            message.append("Please, check your internet connection!")
-            button.text = "Find a car"
-        }
-        textView1.text = message
+    private fun disableButton(button: TextView) {
         button.isEnabled = false
         button.isClickable = false
     }
 
-    private fun enableButton(textView1: TextView, button: TextView) {
-        textView1.text = null
-        button.text = "Find a car"
+    private fun enableButton(button: TextView) {
         button.isEnabled = true
         button.isClickable = true
+    }
+
+    private fun searchingButton(button: TextView) {
+        button.text = "Searching..."
+    }
+
+    private fun findButton(button: TextView) {
+        button.text = "Find a car"
+    }
+
+    private fun noInternetMessage(textView1: TextView) {
+        val message = StringBuilder()
+        message.append("Please, check your internet connection!")
+        textView1.text = message
+    }
+
+    private fun internetBackMessage(textView1: TextView) {
+        textView1.text = null
     }
 }
