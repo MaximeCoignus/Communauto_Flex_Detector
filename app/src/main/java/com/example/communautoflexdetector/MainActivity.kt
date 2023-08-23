@@ -44,13 +44,22 @@ class MainActivity : ComponentActivity() {
                 try
                 {
                     var numberOfCars = 0
+                    var counter = 0
                     disableButton(button)
                     searchingButton(button)
-                    while (numberOfCars == 0) {
-                        delay(500L)
-                        numberOfCars = execution()
+                    deleteMessage(textView1)
+                    while (numberOfCars == 0 && counter < 3000) {
+                        delay(100L)
+                        numberOfCars = execution()[0] as Int
+                        counter++
                     }
-                    sendNotification("$numberOfCars Car(s) available!", "Go get your car quickly!")
+                    if (numberOfCars == 0) {
+                        sendNotification("Research timed out", "No car found, please retry later!")
+                    } else {
+                        val plate = execution()[1] as String
+                        foundCarMessage(textView1, plate)
+                        sendNotification("1 or more car available", "Click here to open Communauto!")
+                    }
                     enableButton(button)
                 }
                 catch (e: IOException)
@@ -63,7 +72,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private suspend fun execution() : Int {
+    private suspend fun execution() : Array<Any> {
         return withContext(Dispatchers.IO) {
             val retrofitBuilder = Retrofit.Builder()
                 .addConverterFactory(GsonConverterFactory.create())
@@ -74,8 +83,9 @@ class MainActivity : ComponentActivity() {
             val result = retrofitBuilder.getData(2, 2, 105)
 
             val body = result.execute().body()!!
-            val vehicles = body.d.Vehicles
-            return@withContext vehicles.size
+            val vehicles = body.d.Vehicles.size
+            val plate = body.d.Vehicles[0].CarPlate
+            return@withContext arrayOf(vehicles, plate)
         }
     }
 
@@ -92,7 +102,7 @@ class MainActivity : ComponentActivity() {
 
     private fun createIntent() : NotificationCompat.Builder {
         val intent = Intent(this, CarFound::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         val pendingIntent: PendingIntent =
             PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
@@ -123,7 +133,7 @@ class MainActivity : ComponentActivity() {
                 super.onAvailable(network)
                 runOnUiThread(Runnable {
                     enableButton(button)
-                    internetBackMessage(textView1)
+                    deleteMessage(textView1)
                 })
             }
 
@@ -171,7 +181,13 @@ class MainActivity : ComponentActivity() {
         textView1.text = message
     }
 
-    private fun internetBackMessage(textView1: TextView) {
+    private fun deleteMessage(textView1: TextView) {
         textView1.text = null
+    }
+
+    private fun foundCarMessage(textView1: TextView, plate: String) {
+        val message = StringBuilder()
+        message.append("Car plate is $plate")
+        textView1.text = message
     }
 }
