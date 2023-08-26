@@ -12,6 +12,7 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import androidx.activity.ComponentActivity
@@ -43,35 +44,40 @@ class MainActivity : ComponentActivity() {
             lifecycleScope.launch {
                 try
                 {
-                    var numberOfCars = 0
+                    var carsData: Array<Any> = arrayOf(0, "null")
+                    var numberOfCars = carsData[0] as Int
                     var counter = 0
                     disableButton(button)
                     searchingButton(button)
                     deleteMessage(textView1)
-                    while (numberOfCars == 0 && counter < 3000) {
-                        delay(100L)
-                        numberOfCars = execution()[0] as Int
+                    while (numberOfCars == 0 && counter < 300) {
+                        carsData = execution()
+                        numberOfCars = carsData[0] as Int
                         counter++
                     }
                     if (numberOfCars == 0) {
-                        sendNotification("Research timed out", "No car found, please retry later!")
+                        sendNotification("Research timed out", "No car found, please try again!")
                     } else {
-                        val plate = execution()[1] as String
+                        val plate = carsData[1] as String
                         foundCarMessage(textView1, plate)
                         sendNotification("1 or more car available", "Click here to open Communauto!")
                     }
-                    enableButton(button)
                 }
                 catch (e: IOException)
                 {
                     disableButton(button)
                     noInternetMessage(textView1)
+                    sendNotification("Research had to stop", "Please, check your internet connection and try again!")
                 }
                 findButton(button)
+                enableButton(button)
             }
         }
     }
 
+    private fun isNotEmpty(list: List<*>?): Boolean {
+        return list != null && list.isNotEmpty()
+    }
     private suspend fun execution() : Array<Any> {
         return withContext(Dispatchers.IO) {
             val retrofitBuilder = Retrofit.Builder()
@@ -84,7 +90,7 @@ class MainActivity : ComponentActivity() {
 
             val body = result.execute().body()!!
             val vehicles = body.d.Vehicles.size
-            val plate = body.d.Vehicles[0].CarPlate
+            val plate = if (isNotEmpty(body.d.Vehicles)) body.d.Vehicles[0].CarPlate else "null"
             return@withContext arrayOf(vehicles, plate)
         }
     }
