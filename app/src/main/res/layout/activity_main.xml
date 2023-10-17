@@ -28,6 +28,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="70dp"
         android:background="@color/teal_700"
@@ -35,5 +36,16 @@
         app:title="Communauto Flex Detector"
         app:titleTextColor="@color/white"
         tools:ignore="MissingConstraints" />
+
+    <Spinner
+        android:id="@+id/city_spinner"
+        android:layout_width="300dp"
+        android:layout_height="70dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar"
+        app:layout_constraintVertical_bias="0.109" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

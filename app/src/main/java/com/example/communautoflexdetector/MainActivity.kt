@@ -12,8 +12,11 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.Spinner
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.core.app.NotificationCompat
@@ -21,7 +24,6 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
@@ -38,6 +40,46 @@ class MainActivity : ComponentActivity() {
         setContentView(R.layout.activity_main)
         val textView1 = findViewById<TextView>(R.id.textView1)
         val button: Button = findViewById(R.id.button)
+        val cities = resources.getStringArray(R.array.cities_array)
+        val spinner : Spinner = findViewById(R.id.city_spinner)
+
+        var cityId : Int? = null
+
+        val citiesMap = HashMap<String, Int>()
+        citiesMap["Toronto"] = 105
+        citiesMap["SW Ontario (Hamilton)"] = 103
+        /*
+        citiesMap["Ottawa"] = 93
+        citiesMap["Montreal"] = 59
+        citiesMap["Sherbrooke"] = 89
+        citiesMap["Quebec"] = 90
+        citiesMap["Gatineau"] = 94
+        citiesMap["Kingston"] = 97
+        citiesMap["Trois-Rivieres"] = 110
+        citiesMap["Victoriaville"] = 112
+        */
+
+        ArrayAdapter.createFromResource(
+            this,
+            R.array.cities_array,
+            android.R.layout.simple_spinner_item
+        ).also { adapter ->
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            spinner.adapter = adapter
+        }
+
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
+                val cityName = cities[p2]
+                cityId = citiesMap[cityName]
+                enableButton(textView1)
+            }
+
+            override fun onNothingSelected(p0: AdapterView<*>?) {
+                disableButton(textView1)
+            }
+        }
+
         createNotificationChannel()
         createNetworkRequest(textView1, button)
         button.setOnClickListener {
@@ -51,7 +93,7 @@ class MainActivity : ComponentActivity() {
                     searchingButton(button)
                     deleteMessage(textView1)
                     while (numberOfCars == 0 && counter < 300) {
-                        carsData = execution()
+                        carsData = execution(cityId!!)
                         numberOfCars = carsData[0] as Int
                         counter++
                     }
@@ -78,7 +120,7 @@ class MainActivity : ComponentActivity() {
     private fun isNotEmpty(list: List<*>?): Boolean {
         return list != null && list.isNotEmpty()
     }
-    private suspend fun execution() : Array<Any> {
+    private suspend fun execution(cityId: Int): Array<Any> {
         return withContext(Dispatchers.IO) {
             val retrofitBuilder = Retrofit.Builder()
                 .addConverterFactory(GsonConverterFactory.create())
@@ -86,7 +128,7 @@ class MainActivity : ComponentActivity() {
                 .build()
                 .create(ApiInterface::class.java)
 
-            val result = retrofitBuilder.getData(2, 2, 105)
+            val result = retrofitBuilder.getData(2, 2, cityId)
 
             val body = result.execute().body()!!
             val vehicles = body.d.Vehicles.size

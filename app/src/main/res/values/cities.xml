@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="cities_array">
+        <item>Toronto</item>
+        <item>SW Ontario (Hamilton)</item>
+        <!-- <item>Ottawa</item>
+        <item>Montreal</item>
+        <item>Sherbrooke</item>
+        <item>Quebec</item>
+        <item>Gatineau</item>
+        <item>Kingston</item>
+        <item>Trois-Rivieres</item>
+        <item>Victoriaville</item> -->
+    </string-array>
+</resources>
