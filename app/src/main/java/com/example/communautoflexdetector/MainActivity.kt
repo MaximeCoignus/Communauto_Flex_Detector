@@ -40,37 +40,74 @@ class MainActivity : ComponentActivity() {
         setContentView(R.layout.activity_main)
         val textView1 = findViewById<TextView>(R.id.textView1)
         val button: Button = findViewById(R.id.button)
-        val cities = resources.getStringArray(R.array.cities_array)
-        val spinner : Spinner = findViewById(R.id.city_spinner)
+
+        val provinces = resources.getStringArray(R.array.provinces_array)
+        val provinceSpinner : Spinner = findViewById(R.id.province_spinner)
+
+        var cities : Array<String>? = null
+        val citySpinner : Spinner = findViewById(R.id.city_spinner)
 
         var cityId : Int? = null
+        var provinceId : Int? = null
 
         val citiesMap = HashMap<String, Int>()
         citiesMap["Toronto"] = 105
         citiesMap["SW Ontario (Hamilton)"] = 103
-        /*
-        citiesMap["Ottawa"] = 93
         citiesMap["Montreal"] = 59
-        citiesMap["Sherbrooke"] = 89
         citiesMap["Quebec"] = 90
-        citiesMap["Gatineau"] = 94
-        citiesMap["Kingston"] = 97
-        citiesMap["Trois-Rivieres"] = 110
-        citiesMap["Victoriaville"] = 112
-        */
+        citiesMap["Halifax"] = 92
+        citiesMap["Calgary"] = 107
+        citiesMap["Edmonton"] = 106
+
+        val provincesMap = HashMap<String, Int>()
+        provincesMap["Quebec"] = 1
+        provincesMap["Ontario"] = 2
+        provincesMap["Nova Scotia"] = 3
+        provincesMap["Alberta"] = 10
+
+        val provincesAndCitiesMap = HashMap<String, Int>()
+        provincesAndCitiesMap["Ontario"] = R.array.ontario_cities_array
+        provincesAndCitiesMap["Quebec"] = R.array.quebec_cities_array
+        provincesAndCitiesMap["Nova Scotia"] = R.array.novascotia_cities_array
+        provincesAndCitiesMap["Alberta"] = R.array.alberta_cities_array
 
         ArrayAdapter.createFromResource(
             this,
-            R.array.cities_array,
+            R.array.provinces_array,
             android.R.layout.simple_spinner_item
         ).also { adapter ->
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            spinner.adapter = adapter
+            provinceSpinner.adapter = adapter
         }
 
-        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+        provinceSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
-                val cityName = cities[p2]
+                val provinceName = provinces[p2]
+                provinceId = provincesMap[provinceName]
+
+                val provinceArray = provincesAndCitiesMap[provinceName]
+                cities = resources.getStringArray(provinceArray!!)
+
+                ArrayAdapter.createFromResource(
+                    applicationContext,
+                    provinceArray,
+                    android.R.layout.simple_spinner_item
+                ).also { adapter ->
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                    citySpinner.adapter = adapter
+                }
+
+                enableButton(textView1)
+            }
+
+            override fun onNothingSelected(p0: AdapterView<*>?) {
+                disableButton(textView1)
+            }
+        }
+
+        citySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
+                val cityName = cities!![p2]
                 cityId = citiesMap[cityName]
                 enableButton(textView1)
             }
@@ -93,7 +130,7 @@ class MainActivity : ComponentActivity() {
                     searchingButton(button)
                     deleteMessage(textView1)
                     while (numberOfCars == 0 && counter < 300) {
-                        carsData = execution(cityId!!)
+                        carsData = execution(cityId!!, provinceId!!)
                         numberOfCars = carsData[0] as Int
                         counter++
                     }
@@ -120,7 +157,7 @@ class MainActivity : ComponentActivity() {
     private fun isNotEmpty(list: List<*>?): Boolean {
         return list != null && list.isNotEmpty()
     }
-    private suspend fun execution(cityId: Int): Array<Any> {
+    private suspend fun execution(cityId: Int, provinceId: Int): Array<Any> {
         return withContext(Dispatchers.IO) {
             val retrofitBuilder = Retrofit.Builder()
                 .addConverterFactory(GsonConverterFactory.create())
@@ -128,7 +165,7 @@ class MainActivity : ComponentActivity() {
                 .build()
                 .create(ApiInterface::class.java)
 
-            val result = retrofitBuilder.getData(2, 2, cityId)
+            val result = retrofitBuilder.getData(provinceId, 2, cityId)
 
             val body = result.execute().body()!!
             val vehicles = body.d.Vehicles.size

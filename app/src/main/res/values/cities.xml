@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="cities_array">
+    <string-array name="ontario_cities_array">
         <item>Toronto</item>
         <item>SW Ontario (Hamilton)</item>
-        <!-- <item>Ottawa</item>
+    </string-array>
+    <string-array name="quebec_cities_array">
         <item>Montreal</item>
-        <item>Sherbrooke</item>
         <item>Quebec</item>
-        <item>Gatineau</item>
-        <item>Kingston</item>
-        <item>Trois-Rivieres</item>
-        <item>Victoriaville</item> -->
+    </string-array>
+    <string-array name="novascotia_cities_array">
+        <item>Halifax</item>
+    </string-array>
+    <string-array name="alberta_cities_array">
+        <item>Calgary</item>
+        <item>Edmonton</item>
     </string-array>
 </resources>
