@@ -1,4 +1,4 @@
-package com.example.communautoflexdetector
+package com.example.communautoflexdetector.data
 
 data class Vehicle(
     val BoardComputerType: Int,

@@ -33,7 +33,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".CarFound"
+            android:name=".data.CarFound"
             android:launchMode="singleTask"
             android:taskAffinity=""
             android:excludeFromRecents="true">
